@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Autodesk Identity Manager
+Exec=/opt/Autodesk/AdskIdentityManager/1.18.1.2/AdskIdentityManager %u
+Type=Application
+MimeType=x-scheme-handler/adskidmgr;x-scheme-handler/adsk.idmgr;
+NoDisplay=true

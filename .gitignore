@@ -1,0 +1,41 @@
+# Installed software, original media, credentials and machine-specific state.
+/Autodesk_Maya_*.tgz
+/media/
+/install/
+/user/
+/projects/
+/cache/
+/logs/
+/backups/
+/state/
+/compat-download/
+/compat-stage/
+/compat-local/
+/research/
+/.aws/
+/.codex/
+/.agents/
+/.ssh/
+/.gnupg/
+/.autodesk/
+/Autodesk/
+/github-repo/
+__pycache__/
+*.py[cod]
+*.rpm
+*.deb
+*.tgz
+*.zip
+*.log
+.env
+.env.*
+# Local secrets and private key exports.
+*.key
+*.pem
+*.p12
+*.pfx
+*.kdbx
+# Private standalone RPM initialization journals and retained database state.
+*.maya-undo/
+userSetup.py.before-hotbox-*
+.maya-hotbox-undo.json

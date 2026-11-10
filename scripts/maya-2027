@@ -1,0 +1,51 @@
+#!/bin/bash
+# Launch template for the native installation described in docs/INSTALL-MAYA.md.
+set -euo pipefail
+base=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+app="$base/install/usr/autodesk/maya2027"
+if (( EUID == 0 )); then
+    echo 'Launch Maya as your normal user from the graphical desktop.' >&2
+    exit 1
+fi
+if [[ ! -x "$app/bin/maya" ]]; then
+    echo "Maya has not been installed at $app; read docs/INSTALL-MAYA.md." >&2
+    exit 1
+fi
+if [[ -z ${DISPLAY:-} ]]; then
+    echo 'No X display is available. Open a terminal in the X11 desktop session.' >&2
+    exit 1
+fi
+if [[ ${XDG_SESSION_TYPE:-} == wayland ]]; then
+    echo 'Use an X11 session for this installation and sign-in workflow.' >&2
+    exit 1
+fi
+umask 077
+unset PYTHONHOME PYTHONPATH QT_PLUGIN_PATH QT_QPA_PLATFORM_PLUGIN_PATH LD_PRELOAD LD_LIBRARY_PATH
+/usr/bin/python3 "$base/scripts/helpers/local_undo.py" capture launcher
+mkdir -p "$base/user" "$base/projects" "$base/cache/tmp" "$base/logs"
+# Only transient Maya panels float; the Maya main window keeps its i3 layout.
+# Start before exporting Maya's bundled library path to the application.
+if [[ -n ${I3SOCK:-} && ${MAYA_I3_PANEL_FIX:-1} != 0 ]]; then
+    if ! /usr/bin/python3 "$base/scripts/helpers/maya-i3-panels.py" --start; then
+        printf 'Hinweis: i3-Panel-Anpassung nicht verfuegbar; Maya startet weiter.\n' >&2
+    fi
+fi
+export MAYA_LOCATION="$app"
+export MAYA_APP_DIR="$base/user"
+export TMPDIR="$base/cache/tmp"
+export MAYA_CLM_LOG_DIR="$base/logs"
+export QT_QPA_PLATFORM=xcb
+export GDK_BACKEND=x11
+export MAYA_MODULE_PATH="$base/state/modules/2027${MAYA_MODULE_PATH:+:$MAYA_MODULE_PATH}"
+# Keep Maya's docking tabs/grips visible on detached panels. Under i3, drag
+# these application handles to redock; the WM titlebar moves the X11 window.
+export MAYA_WORKSPACES_ALWAYS_SHOW_TAB=1
+export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+# Autodesk ships a genuine compatibility libffi here. Its vendor launcher
+# selects this directory using /usr/lib64 tests that do not match Debian.
+export LD_LIBRARY_PATH="$base/compat-local/lib"
+if [[ -f "$app/lib/el9/libffi.so.6" ]]; then
+    export LD_LIBRARY_PATH="$base/compat-local/lib:$app/lib/el9"
+fi
+# Keep HOME, XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS from the desktop.
+exec "$app/bin/maya" "$@"
